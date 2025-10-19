@@ -22,19 +22,6 @@ pass() {
     echo "OK: $1"
 }
 
-list_zip_contents() {
-    local archive_path="$1"
-    python3 - <<'PYTHON' "$archive_path"
-import sys
-import zipfile
-
-archive = sys.argv[1]
-with zipfile.ZipFile(archive, "r") as zf:
-    for name in zf.namelist():
-        print(name)
-PYTHON
-}
-
 test_nozip() {
     local workdir="$WORK_ROOT/nozip_case"
     mkdir -p "$workdir"
@@ -62,7 +49,7 @@ test_zip() {
     local archive="$workdir/back_2012.zip"
     [[ -f "$archive" ]] || fail "zip: back_2012.zip が作成されていません"
     [[ ! -d "$workdir/2012" ]] || fail "zip: 2012 フォルダが削除されていません"
-    list_zip_contents "$archive" | grep -q "2012/summary_2012.csv" || fail "zip: アーカイブ内にファイルが見つかりません"
+    unzip -Z1 "$archive" | grep -q "2012/summary_2012.csv" || fail "zip: アーカイブ内にファイルが見つかりません"
     pass "zip: アーカイブ作成とフォルダ削除を確認しました"
 }
 

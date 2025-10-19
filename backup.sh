@@ -32,6 +32,11 @@ if [ "$compress_mode" != "zip" ] && [ "$compress_mode" != "nozip" ] && [ "$compr
     exit 1
 fi
 
+if [ "$compress_mode" = "zip" ] && ! command -v zip > /dev/null 2>&1; then
+    echo "エラー: zip モードを選択しましたが zip コマンドが見つかりません"
+    exit 1
+fi
+
 # zip アーカイブ作成ヘルパー
 compress_with_zip() {
     local archive_path="$1"
@@ -118,6 +123,7 @@ if [ "$mode" = "1" ]; then
                 echo "  $target_dir フォルダを削除しました"
             else
                 echo "  エラー: $year のgzip圧縮に失敗しました"
+                exit 1
             fi
         else
             echo "  圧縮モード: nozip のためフォルダを保持します"
@@ -188,6 +194,7 @@ elif [ "$mode" = "2" ]; then
                     echo "  $target_dir フォルダを削除しました"
                 else
                     echo "  エラー: $yearmonth のgzip圧縮に失敗しました"
+                    exit 1
                 fi
             else
                 echo "  圧縮モード: nozip のためフォルダを保持します"
