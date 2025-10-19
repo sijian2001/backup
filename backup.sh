@@ -118,7 +118,10 @@ if [ "$mode" = "1" ]; then
         file_count=0
         for file in *${year}*; do
             if [ -f "$file" ] && [[ "$file" != back_* ]] && { [ -z "$archive_name" ] || [ "$file" != "$archive_name" ]; }; then
-                mv "$file" "$target_dir/"
+                if ! mv "$file" "$target_dir/"; then
+                    echo "エラー: ファイル移動に失敗しました: $file -> $target_dir/" >&2
+                    exit 1
+                fi
                 echo "    Moved $file to $target_dir/"
                 ((file_count++))
             fi
@@ -189,7 +192,10 @@ elif [ "$mode" = "2" ]; then
             file_count=0
             for file in *${yearmonth}*; do
                 if [ -f "$file" ] && [[ "$file" != back_* ]] && { [ -z "$archive_name" ] || [ "$file" != "$archive_name" ]; }; then
-                    mv "$file" "$target_dir/"
+                    if ! mv "$file" "$target_dir/"; then
+                        echo "エラー: ファイル移動に失敗しました: $file -> $target_dir/" >&2
+                        exit 1
+                    fi
                     echo "    Moved $file to $target_dir/"
                     ((file_count++))
                 fi
