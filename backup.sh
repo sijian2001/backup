@@ -1,22 +1,47 @@
 #!/bin/bash
 
 # バックアップスクリプト
-# 使用法: ./backup.sh <フォルダ名> <モード> <圧縮モード>
+# 使用法: ./backup.sh <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]
 # モード: 1=年モード(yyyy), 2=年月モード(yyyymm)
 # 圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮
 
 # 引数チェック
-if [ $# -ne 3 ]; then
+if [ $# -ne 3 ] && [ $# -ne 5 ]; then
     echo "エラー: 引数が正しく設定されていません"
-    echo "使用法: $0 <フォルダ名> <モード> <圧縮モード>"
+    echo "使用法: $0 <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]"
     echo "モード: 1=年モード(yyyy), 2=年月モード(yyyymm)"
     echo "圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮"
+    echo "開始年・終了年は省略時 2010〜2024 を処理します"
     exit 1
 fi
 
 dir="$1"
 mode="$2"
 compress_mode="$3"
+DEFAULT_START_YEAR=2010
+DEFAULT_END_YEAR=2024
+start_year="$DEFAULT_START_YEAR"
+end_year="$DEFAULT_END_YEAR"
+
+if [ $# -eq 5 ]; then
+    start_year="$4"
+    end_year="$5"
+fi
+
+# 年度バリデーション
+is_valid_year() {
+    [[ "$1" =~ ^[0-9]{4}$ ]]
+}
+
+if ! is_valid_year "$start_year" || ! is_valid_year "$end_year"; then
+    echo "エラー: 開始年と終了年は4桁の数字で指定してください"
+    exit 1
+fi
+
+if [ "$start_year" -gt "$end_year" ]; then
+    echo "エラー: 開始年は終了年以下で指定してください"
+    exit 1
+fi
 
 # モードチェック
 if [ "$mode" != "1" ] && [ "$mode" != "2" ]; then
@@ -62,7 +87,7 @@ cd "$dir" || exit 1
 # モードによって処理を分岐
 if [ "$mode" = "1" ]; then
     # 年モード: 2010から2024まで処理
-    for year in 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024; do
+    for ((year=start_year; year<=end_year; year++)); do
         echo "処理中: $year"
         archive_name=""
         if [ "$compress_mode" = "zip" ]; then
@@ -131,9 +156,9 @@ if [ "$mode" = "1" ]; then
     done
 elif [ "$mode" = "2" ]; then
     # 年月モード: 2010年1月から2024年12月まで処理
-    for year in 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024; do
+    for ((year=start_year; year<=end_year; year++)); do
         for month in 01 02 03 04 05 06 07 08 09 10 11 12; do
-            yearmonth="${year}${month}"
+            yearmonth=$(printf "%04d%s" "$year" "$month")
             echo "処理中: $yearmonth"
             archive_name=""
             if [ "$compress_mode" = "zip" ]; then

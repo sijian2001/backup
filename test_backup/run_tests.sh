@@ -27,7 +27,7 @@ test_nozip() {
     mkdir -p "$workdir"
     touch "$workdir/report_2010.txt"
 
-    bash "$SCRIPT_PATH" "$workdir" 1 nozip > "$LOG_ROOT/nozip.log"
+    bash "$SCRIPT_PATH" "$workdir" 1 nozip 2010 2010 > "$LOG_ROOT/nozip.log"
 
     [[ -d "$workdir/2010" ]] || fail "nozip: 2010 フォルダが作成されていません"
     [[ -f "$workdir/2010/report_2010.txt" ]] || fail "nozip: ファイルが 2010/ に移動されていません"
@@ -44,7 +44,7 @@ test_zip() {
     mkdir -p "$workdir"
     touch "$workdir/summary_2012.csv"
 
-    bash "$SCRIPT_PATH" "$workdir" 1 zip > "$LOG_ROOT/zip.log"
+    bash "$SCRIPT_PATH" "$workdir" 1 zip 2012 2012 > "$LOG_ROOT/zip.log"
 
     local archive="$workdir/back_2012.zip"
     [[ -f "$archive" ]] || fail "zip: back_2012.zip が作成されていません"
@@ -58,7 +58,7 @@ test_gzip() {
     mkdir -p "$workdir"
     touch "$workdir/log_201305.txt"
 
-    bash "$SCRIPT_PATH" "$workdir" 2 gzip > "$LOG_ROOT/gzip.log"
+    bash "$SCRIPT_PATH" "$workdir" 2 gzip 2013 2013 > "$LOG_ROOT/gzip.log"
 
     local archive="$workdir/back_201305.tar.gz"
     [[ -f "$archive" ]] || fail "gzip: back_201305.tar.gz が作成されていません"

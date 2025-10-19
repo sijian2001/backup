@@ -6,8 +6,8 @@
 - `README.md`, `CLAUDE.md`, `Linux実行手順.md` — reference documents describing requirements and platform notes; update alongside script changes.
 
 ## Build, Test, and Development Commands
-- `bash backup.sh <target_dir> 1 <zip|gzip|nozip>` — run the yearly backup mode and choose compression at call time; `zip` モードは `zip` コマンドが必要。
-- `bash backup.sh <target_dir> 2 <zip|gzip|nozip>` — run the year-month backup mode; confirm that matching files are moved and archived correctly.
+- `bash backup.sh <target_dir> 1 <zip|gzip|nozip> [<開始年> <終了年>]` — run the yearly backup mode within the specified year range (default 2010〜2024); `zip` モードは `zip` コマンドが必要。
+- `bash backup.sh <target_dir> 2 <zip|gzip|nozip> [<開始年> <終了年>]` — run the year-month backup mode; confirm that matching files are moved and archived correctly within the same range。
 - `bash test_backup/run_tests.sh` — smoke-test all compression modes with disposable fixtures; review logs in the generated `logs/` subfolder if failures arise.
 - `shellcheck backup.sh` — lint to catch unsafe Bash patterns; treat warnings as actionable even if the script runs.
 - `bash -n backup.sh` — fast syntax check before sending a pull request.
