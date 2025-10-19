@@ -11,7 +11,7 @@ if [ $# -ne 3 ] && [ $# -ne 5 ]; then
     echo "使用法: $0 <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]"
     echo "モード: 1=年モード(yyyy), 2=年月モード(yyyymm)"
     echo "圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮"
-    echo "開始年・終了年は省略時 2010〜2024 を処理します"
+    echo "開始年・終了年は省略時 2010〜現在年 を処理します"
     exit 1
 fi
 
@@ -19,13 +19,15 @@ dir="$1"
 mode="$2"
 compress_mode="$3"
 DEFAULT_START_YEAR=2010
-DEFAULT_END_YEAR=2024
+DEFAULT_END_YEAR=$(date +%Y)
 start_year="$DEFAULT_START_YEAR"
 end_year="$DEFAULT_END_YEAR"
 
 if [ $# -eq 5 ]; then
     start_year="$4"
     end_year="$5"
+elif [ $# -eq 4 ]; then
+    start_year="$4"
 fi
 
 # 年度バリデーション
