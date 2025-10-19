@@ -13,7 +13,7 @@
 - `bash -n backup.sh` — fast syntax check before sending a pull request.
 
 ## Coding Style & Naming Conventions
-- Follow POSIX-friendly Bash; rely on built-in utilities (`printf`, `mkdir`, `tar`) and guard all commands with error handling. Python 3 is the fallback when `zip` is unavailable.
+- Follow POSIX-friendly Bash; rely on built-in utilities (`printf`, `mkdir`, `tar`, `zip`) and guard all commands with error handling.
 - Indent with four spaces, keep conditional blocks compact, and prefer descriptive variable names (`yearmonth`, `file_count`).
 - Echo status lines in Japanese to match existing output; clarify new messages with consistent prefixes (`処理中`, `エラー`).
 
