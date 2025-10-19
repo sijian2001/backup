@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# バックアップスクリプト
-# 使用法: ./backup.sh <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]
-# モード: 1=年モード(yyyy), 2=年月モード(yyyymm)
-# 圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮
+# Backup script
+# Usage: ./backup.sh <directory> <mode> <compression_mode> [<start_year> <end_year>]
+# Mode: 1=Year mode (yyyy), 2=Year-month mode (yyyymm)
+# Compression mode: nozip=no compression, zip=zip archive, gzip=gzip archive
 
-# 引数チェック
+# Validate arguments
 if [ $# -lt 3 ] || [ $# -gt 5 ]; then
-    echo "エラー: 引数が正しく設定されていません"
-    echo "使用法: $0 <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]"
-    echo "モード: 1=年モード(yyyy), 2=年月モード(yyyymm)"
-    echo "圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮"
-    echo "開始年・終了年は省略時 2010〜現在年 を処理します"
+    echo "Error: invalid arguments"
+    echo "Usage: $0 <directory> <mode> <compression_mode> [<start_year> <end_year>]"
+    echo "Mode: 1=Year mode (yyyy), 2=Year-month mode (yyyymm)"
+    echo "Compression mode: nozip=no compression, zip=zip archive, gzip=gzip archive"
+    echo "If start/end year are omitted, the range defaults to 2010 through the current year"
     exit 1
 fi
 
@@ -31,41 +31,41 @@ if [ $# -eq 5 ]; then
     end_year="$5"
 fi
 
-# 年度バリデーション
+# Year validation helper
 is_valid_year() {
     [[ "$1" =~ ^[0-9]{4}$ ]]
 }
 
 if ! is_valid_year "$start_year" || ! is_valid_year "$end_year"; then
-    echo "エラー: 開始年と終了年は4桁の数字で指定してください"
+    echo "Error: start and end year must be four-digit numbers"
     exit 1
 fi
 
 if [ "$start_year" -gt "$end_year" ]; then
-    echo "エラー: 開始年は終了年以下で指定してください"
+    echo "Error: start year must be less than or equal to end year"
     exit 1
 fi
 
-# モードチェック
+# Validate mode argument
 if [ "$mode" != "1" ] && [ "$mode" != "2" ]; then
-    echo "エラー: モードは1または2を指定してください"
-    echo "モード: 1=年モード(yyyy), 2=年月モード(yyyymm)"
+    echo "Error: mode must be 1 or 2"
+    echo "Mode: 1=Year mode (yyyy), 2=Year-month mode (yyyymm)"
     exit 1
 fi
 
-# 圧縮モードチェック
+# Validate compression mode
 if [ "$compress_mode" != "zip" ] && [ "$compress_mode" != "nozip" ] && [ "$compress_mode" != "gzip" ]; then
-    echo "エラー: 圧縮モードはzip、nozip、またはgzipを指定してください"
-    echo "圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮"
+    echo "Error: compression mode must be zip, nozip, or gzip"
+    echo "Compression mode: nozip=no compression, zip=zip archive, gzip=gzip archive"
     exit 1
 fi
 
 if [ "$compress_mode" = "zip" ] && ! command -v zip > /dev/null 2>&1; then
-    echo "エラー: zip モードを選択しましたが zip コマンドが見つかりません"
+    echo "Error: zip mode selected but the zip command is not available"
     exit 1
 fi
 
-# zip アーカイブ作成ヘルパー
+# Zip archive helper
 compress_with_zip() {
     local archive_path="$1"
     local target_dir="$2"
@@ -73,25 +73,25 @@ compress_with_zip() {
     if command -v zip > /dev/null 2>&1; then
         zip -rq "$archive_path" "$target_dir"
     else
-        echo "  エラー: zipコマンドが見つかりません" >&2
+        echo "  Error: zip command not found" >&2
         return 1
     fi
 }
 
-# フォルダの存在チェック
+# Ensure target directory exists
 if [ ! -d "$dir" ]; then
-    echo "エラー: フォルダ '$dir' が存在しません"
+    echo "Error: directory '$dir' does not exist"
     exit 1
 fi
 
-echo "バックアップ処理開始: $dir"
+echo "Starting backup for: $dir"
 cd "$dir" || exit 1
 
-# モードによって処理を分岐
+# Dispatch to the requested processing mode
 if [ "$mode" = "1" ]; then
-    # 年モード: 2010から2024まで処理
+    # Year mode: iterate over requested years
     for ((year=start_year; year<=end_year; year++)); do
-        echo "処理中: $year"
+        echo "Processing year: $year"
         archive_name=""
         if [ "$compress_mode" = "zip" ]; then
             archive_name="back_${year}.zip"
@@ -101,31 +101,31 @@ if [ "$mode" = "1" ]; then
         target_dir="$year"
         created_dir=0
 
-        # zip ファイルが既に存在するかチェック
+        # Skip if an archive already exists
         if [ -n "$archive_name" ] && [ -f "$archive_name" ]; then
-            echo "  $archive_name は既に存在します。スキップします。"
+            echo "  $archive_name already exists; skipping."
             continue
         fi
 
-        # 年フォルダを作成
+        # Create staging directory
         if [ ! -d "$target_dir" ]; then
             mkdir "$target_dir"
             created_dir=1
-            echo "  フォルダ $target_dir を作成しました"
+            echo "  Created directory $target_dir"
         fi
 
-        # 該当するファイルを検索して移動
+        # Move matching files into staging directory
         file_count=0
         for file in *${year}*; do
             if [ -f "$file" ] && [[ "$file" != back_* ]] && { [ -z "$archive_name" ] || [ "$file" != "$archive_name" ]; }; then
                 mv "$file" "$target_dir/"
-                echo "    $file を $target_dir/ に移動しました"
+                echo "    Moved $file to $target_dir/"
                 ((file_count++))
             fi
         done
 
         if [ $file_count -eq 0 ]; then
-            echo "  $year に該当するファイルがありません"
+            echo "  No files matched year $year"
             if [ $created_dir -eq 1 ]; then
                 rmdir "$target_dir"
             fi
@@ -133,36 +133,36 @@ if [ "$mode" = "1" ]; then
         fi
 
         if [ "$compress_mode" = "zip" ]; then
-            # フォルダを圧縮（移動モード）
-            echo "  $target_dir フォルダを圧縮中..."
+            # Compress directory (move mode)
+            echo "  Compressing $target_dir directory with zip..."
             if compress_with_zip "$archive_name" "$target_dir"; then
-                echo "  $archive_name を作成しました"
+                echo "  Created $archive_name"
                 rm -rf "$target_dir"
-                echo "  $target_dir フォルダを削除しました"
+                echo "  Removed directory $target_dir"
             else
-                echo "  エラー: $year の圧縮に失敗しました"
+                echo "  Error: failed to compress year $year with zip"
                 exit 1
             fi
         elif [ "$compress_mode" = "gzip" ]; then
-            echo "  $target_dir フォルダをgzip圧縮中..."
+            echo "  Compressing $target_dir directory with gzip..."
             if tar -czf "$archive_name" "$target_dir/"; then
-                echo "  $archive_name を作成しました"
+                echo "  Created $archive_name"
                 rm -rf "$target_dir"
-                echo "  $target_dir フォルダを削除しました"
+                echo "  Removed directory $target_dir"
             else
-                echo "  エラー: $year のgzip圧縮に失敗しました"
+                echo "  Error: failed to compress year $year with gzip"
                 exit 1
             fi
         else
-            echo "  圧縮モード: nozip のためフォルダを保持します"
+            echo "  Compression mode nozip; preserving directory $target_dir"
         fi
     done
 elif [ "$mode" = "2" ]; then
-    # 年月モード: 2010年1月から2024年12月まで処理
+    # Year-month mode: iterate over requested months
     for ((year=start_year; year<=end_year; year++)); do
         for month in 01 02 03 04 05 06 07 08 09 10 11 12; do
             yearmonth=$(printf "%04d%s" "$year" "$month")
-            echo "処理中: $yearmonth"
+            echo "Processing year-month: $yearmonth"
             archive_name=""
             if [ "$compress_mode" = "zip" ]; then
                 archive_name="back_${yearmonth}.zip"
@@ -172,31 +172,31 @@ elif [ "$mode" = "2" ]; then
             target_dir="$yearmonth"
             created_dir=0
 
-            # zip ファイルが既に存在するかチェック
+            # Skip if an archive already exists
             if [ -n "$archive_name" ] && [ -f "$archive_name" ]; then
-                echo "  $archive_name は既に存在します。スキップします。"
+                echo "  $archive_name already exists; skipping."
                 continue
             fi
 
-            # 年月フォルダを作成
+            # Create staging directory
             if [ ! -d "$target_dir" ]; then
                 mkdir "$target_dir"
                 created_dir=1
-                echo "  フォルダ $target_dir を作成しました"
+                echo "  Created directory $target_dir"
             fi
 
-            # 該当するファイルを検索して移動
+            # Move matching files into staging directory
             file_count=0
             for file in *${yearmonth}*; do
                 if [ -f "$file" ] && [[ "$file" != back_* ]] && { [ -z "$archive_name" ] || [ "$file" != "$archive_name" ]; }; then
                     mv "$file" "$target_dir/"
-                    echo "    $file を $target_dir/ に移動しました"
+                    echo "    Moved $file to $target_dir/"
                     ((file_count++))
                 fi
             done
 
             if [ $file_count -eq 0 ]; then
-                echo "  $yearmonth に該当するファイルがありません"
+                echo "  No files matched $yearmonth"
                 if [ $created_dir -eq 1 ]; then
                     rmdir "$target_dir"
                 fi
@@ -204,31 +204,31 @@ elif [ "$mode" = "2" ]; then
             fi
 
             if [ "$compress_mode" = "zip" ]; then
-                # フォルダを圧縮（移動モード）
-                echo "  $target_dir フォルダを圧縮中..."
+                # Compress directory (move mode)
+                echo "  Compressing $target_dir directory with zip..."
                 if compress_with_zip "$archive_name" "$target_dir"; then
-                    echo "  $archive_name を作成しました"
+                    echo "  Created $archive_name"
                     rm -rf "$target_dir"
-                    echo "  $target_dir フォルダを削除しました"
+                    echo "  Removed directory $target_dir"
                 else
-                    echo "  エラー: $yearmonth の圧縮に失敗しました"
+                    echo "  Error: failed to compress $yearmonth with zip"
                     exit 1
                 fi
             elif [ "$compress_mode" = "gzip" ]; then
-                echo "  $target_dir フォルダをgzip圧縮中..."
+                echo "  Compressing $target_dir directory with gzip..."
                 if tar -czf "$archive_name" "$target_dir/"; then
-                    echo "  $archive_name を作成しました"
+                    echo "  Created $archive_name"
                     rm -rf "$target_dir"
-                    echo "  $target_dir フォルダを削除しました"
+                    echo "  Removed directory $target_dir"
                 else
-                    echo "  エラー: $yearmonth のgzip圧縮に失敗しました"
+                    echo "  Error: failed to compress $yearmonth with gzip"
                     exit 1
                 fi
             else
-                echo "  圧縮モード: nozip のためフォルダを保持します"
+                echo "  Compression mode nozip; preserving directory $target_dir"
             fi
         done
     done
 fi
 
-echo "バックアップ処理完了"
+echo "Backup completed"
