@@ -6,7 +6,7 @@
 # 圧縮モード: nozip=圧縮しない zip=zip圧縮 gzip=gzip圧縮
 
 # 引数チェック
-if [ $# -ne 3 ] && [ $# -ne 5 ]; then
+if [ $# -lt 3 ] || [ $# -gt 5 ]; then
     echo "エラー: 引数が正しく設定されていません"
     echo "使用法: $0 <フォルダ名> <モード> <圧縮モード> [<開始年> <終了年>]"
     echo "モード: 1=年モード(yyyy), 2=年月モード(yyyymm)"
@@ -23,11 +23,12 @@ DEFAULT_END_YEAR=$(date +%Y)
 start_year="$DEFAULT_START_YEAR"
 end_year="$DEFAULT_END_YEAR"
 
+if [ $# -ge 4 ]; then
+    start_year="$4"
+fi
+
 if [ $# -eq 5 ]; then
-    start_year="$4"
     end_year="$5"
-elif [ $# -eq 4 ]; then
-    start_year="$4"
 fi
 
 # 年度バリデーション
